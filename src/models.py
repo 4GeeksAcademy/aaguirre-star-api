@@ -27,6 +27,8 @@ class Usuario(db.Model):
 class Planeta(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=False, nullable=False)
+    climate = db.Column(db.String(20), nullable= False)
+
 
     def __repr__(self): 
         return '<User %r>' % self.id
@@ -35,6 +37,7 @@ class Planeta(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "climate": self.climate
         }
 
 class Personajes(db.Model):
@@ -52,6 +55,21 @@ class Personajes(db.Model):
         
 class Favorito (db.Model):
     id = db.Column(db.Integer,primary_key=True )
+    planeta_favorito = db.Column(db.Integer, db.ForeignKey('planeta.id'))
+    personajes_favorito = db.Column(db.Integer, db.ForeignKey('personajes.id'))
+
+    def __repr__(self):
+        return '<User %r>' % self.id
+       
+    
+    def __serialize(self):
+        return {
+            "id": self.id,
+            "planeta_favorito": self.planeta_favorito, 
+            "personajes_favorito": self.personajes_favorito
+        }
+
+
 
 
 
