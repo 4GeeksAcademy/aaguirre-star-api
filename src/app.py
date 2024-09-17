@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Usuario
+from models import db, Usuario, Planetas, Personajes, Favoritos
 #from models import Person
 
 app = Flask(__name__)
@@ -36,14 +36,42 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+
+#metodos para obtener todos los usuarios. 
+@app.route('/usuario', methods=['GET'])
+def obtener_usuarios():
+    usuarios = Usuario.query.all() #obtengo de la tabla usuario y los almaceno, me devuelve una lista.
+    todos_usuario = [usuarios.serialize() for usuario in usuarios ] #uso el metodo ser. q convierte el obj usuario en un dicc. Itero sobre cada obj usuario de la lista usuarios de arriba. 
 
     response_body = {
-        "msg": "Hello, this is your GET /user response "
+        "msg": "Usuarios encontrados", 
+        "usuarios": todos_usuario  #agrego la lista de usuarios a la rspuesta
     }
 
-    return jsonify(response_body), 200
+    return jsonify(response_body), 200 # respuesta correcta. 
+
+#metodo para obtener un unico usuario, según su id. 
+@app.route('/usuario/<int:id>', methods=['GET'])
+def obtener_un_usuario(id):
+    usuario = Usuario.query.get(id)
+    #verifico si el usuario se encontro, 
+    if usuario is None:
+        return jsonify({'msg':"Usuario no encontrado"}), 400
+    #en caso de encontrar el usuario, convierto el js a dicc
+    return jsonify(usuario.serialaze()), 200
+
+#metdo para agregar un usuario
+@app.route('/planetas', methods=['GET'])
+def obtener_planetas():
+    list_planetas = Planetas.query.all()
+    todos_planetas = [planeta.serialize() for planeta in list_planetas ]
+    reponse_body = {
+        'msg': 'Planetas encontrados', 
+        'planetas':todos_planetas
+    }
+    return jsonify(reponse_body),200
+
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
