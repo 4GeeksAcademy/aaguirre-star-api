@@ -123,6 +123,29 @@ def agregar_planeta():
         db.session.rollback()
         return jsonify({'msg': str(e)}), 500
     
+#agregar un personaje:
+@app.route('/personajes', methods=['POST'])
+def agregar_personajes():
+    data = request.get_json()
+    name = data.get('name')
+    
+
+    if not  name :
+        return jsonify({'msg':'Error campos obligatorios'}), 400
+    
+    if Personajes.query.filter_by(name=name).first():
+        return jsonify({'msg': 'El personaje ya existe '}), 400
+    
+    nuevo_personaje = Personajes( name=name)
+
+    try: 
+        db.session.add(nuevo_personaje)
+        db.session.commit()
+        return jsonify({'msg': 'Personaje agregado con exito '}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
+    
 
     
 
