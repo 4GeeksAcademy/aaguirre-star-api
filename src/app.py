@@ -100,6 +100,8 @@ def personaje_id(id):
         return jsonify({'msg': 'Personaje no encontrado'}), 400
     return jsonify(personaje.serialaze()),200
 
+
+
 #agregar un plenta
 @app.route('/planetas', methods=['POST'])
 def agregar_planeta():
@@ -146,9 +148,30 @@ def agregar_personajes():
         db.session.rollback()
         return jsonify({'msg': str(e)}), 500
     
-
+#agregar un personaje a favoritos 
+@app.route('/favoritos/personajes', methods =['POST'])
+def favoritos_personaje():
+    data = request.get_json()
     
+    personaje_id = data.get("personaje_id")
 
+    if not personaje_id: 
+        return jsonify({'msg': 'Personaje id no enviado'}), 400
+    
+    personaje = Favoritos.query.filter_by(personajes_favorito=personaje_id).first()
+    
+    if personaje: 
+        return jsonify({'msg': 'El personaje ya existe en favoritos'}), 400
+    
+    nuevo_favorito = Favoritos(personajes_favorito=personaje_id)
+
+    try: 
+        db.session.add(nuevo_favorito)
+        db.session.commit()
+        return jsonify({'msg': 'Personaje agregado con exito '}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
 
 
     
@@ -163,9 +186,9 @@ def favoritos_planetas():
     if not planeta_id: 
         return jsonify({'msg': 'Planeta id no enviado'}), 400
     
-    planeta = Planetas.query.get(planeta_id)
-    if not planeta: 
-        return jsonify({'msg': 'El planeta no existe'}), 400
+    planeta = Favoritos.query.filter_by(planeta_favorito=planeta_id).first()
+    if planeta: 
+        return jsonify({'msg': 'El planeta ya existe en favoritos'}), 400
     
     nuevo_favorito = Favoritos(planeta_favorito=planeta_id)
 
@@ -177,8 +200,83 @@ def favoritos_planetas():
         db.session.rollback()
         return jsonify({'msg': str(e)}), 500
     
+#eliminar TODOS los planetas:
+@app.route('/planetas', methods=['DELETE'])
+def eliminar_planeta():
+    try: #codigo a ejecutar
 
-   
+        planetas = Planetas.query.all()
+
+        if not planetas: 
+            return jsonify({'msg':'No hay planetas para borrar'}), 400
+        
+        for planeta in planetas:
+            db.session.delete(planeta)
+        db.session.commit()
+        return jsonify({'msg': 'Planetas eliminados con exito '}), 200
+
+        
+    except Exception as e: #se ejecuta si el bloque try falla 
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
+
+#eliminar TODOS los personajes:
+@app.route('/personajes', methods=['DELETE'])
+def eliminar_personajes():
+    try: #codigo a ejecutar
+
+        personajes = Personajes.query.all()
+
+        if not personajes: 
+            return jsonify({'msg':'No hay personajes para borrar'}), 400
+        
+        for personaje in personajes:
+            db.session.delete(personaje)
+        db.session.commit()
+        return jsonify({'msg': 'Personajes eliminados con exito '}), 200
+
+        
+    except Exception as e: #se ejecuta si el bloque try falla 
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
+    
+    
+#eliminar un planeta de favoritos:
+@app.route('/favoritos/planetas/<int:id>', methods=['DELETE'])
+def eliminar_fav_planeta(id):
+    try:
+        planeta = Favoritos.query.filter_by(planeta_favorito=id).first()
+    
+        if planeta is None:
+            return jsonify({"msg":"Planeta no encontrado en favoritos"}), 400
+    
+        db.session.delete(planeta)
+        db.session.commit()
+        return jsonify({'msg': 'Planeta eliminado de favoritos con exito '}), 200
+    except Exception as e: #se ejecuta si el bloque try falla 
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
+    
+
+#elimnar un personaje de favoritos: 
+@app.route('/favoritos/personajes/<int:id>', methods=['DELETE'])
+def eliminar_fav_personaje(id):
+
+    try:
+        personaje = Favoritos.query.filter_by(personajes_favorito=id).first()
+
+        if personaje is None:
+            return jsonify({"msg":"Personaje no encontrado en favoritos"}), 400
+       
+        db.session.delete(personaje)
+        db.session.commit()
+        return jsonify({'msg': 'Personaje eliminado de favoritos con exito '}), 200
+    except Exception as e: #se ejecuta si el bloque try falla 
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
+
+
+
 
 
 
