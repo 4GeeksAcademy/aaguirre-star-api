@@ -2,9 +2,11 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 from flask_migrate import Migrate
-from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
@@ -60,7 +62,7 @@ def obtener_un_usuario(id):
     #en caso de encontrar el usuario, convierto el js a dicc
     return jsonify(usuario.serialaze()), 200
 
-#metdo para agregar un usuario
+#metdo para agregar todos los planetas
 @app.route('/planetas', methods=['GET'])
 def obtener_planetas():
     list_planetas = Planetas.query.all()
@@ -70,6 +72,92 @@ def obtener_planetas():
         'planetas':todos_planetas
     }
     return jsonify(reponse_body),200
+
+#obtengo un planeta con su id 
+@app.route('/planetas/<int:id>', methods=['GET'])
+def planeta_id(id):
+    planeta = Planetas.query.get(id)
+    if planeta is None: 
+        return jsonify({'msg':'Planeta no encontrado'}), 400
+    return jsonify(planeta.serialaze()),200
+
+#obtener TODOS los personajes
+@app.route('/personajes', methods=['GET'])
+def obtener_personajes():
+    list_personajes = Personajes.query.all()
+    todos_personajes = [personajes.serialize() for personajes in list_personajes]
+    response_body = {
+        'msg': 'Personajes encontrados', 
+        'personajes': todos_personajes
+    }
+    return jsonify(response_body), 200
+
+#obtener UN personaje según su id:
+@app.route('/personajes/<int:id>', methods=['GET'])
+def personaje_id(id):
+    personaje = Personajes.query.get(id)
+    if personaje is None: 
+        return jsonify({'msg': 'Personaje no encontrado'}), 400
+    return jsonify(personaje.serialaze()),200
+
+#agregar un plenta
+@app.route('/planetas', methods=['POST'])
+def agregar_planeta():
+    data = request.get_json()
+    name = data.get('name')
+    climate = data.get('climate')
+
+    if not  name or not climate:
+        return jsonify({'msg':'Error campos obligatorios'}), 400
+    
+    if Planetas.query.filter_by(name=name).first():
+        return jsonify({'msg': 'El planeta ya existe '}), 400
+    
+    nuevo_planeta = Planetas( name=name, climate= climate)
+
+    try: 
+        db.session.add(nuevo_planeta)
+        db.session.commit()
+        return jsonify({'msg': 'Planeta agregado con exito '}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
+    
+
+    
+
+
+
+    
+
+#agregar un planeta a fav.
+@app.route('/favoritos/planetas', methods =['POST'])
+def favoritos_planetas():
+    data = request.get_json()
+    
+    planeta_id = data.get("planeta_id")
+
+    if not planeta_id: 
+        return jsonify({'msg': 'Planeta id no enviado'}), 400
+    
+    planeta = Planetas.query.get(planeta_id)
+    if not planeta: 
+        return jsonify({'msg': 'El planeta no existe'}), 400
+    
+    nuevo_favorito = Favoritos(planeta_favorito=planeta_id)
+
+    try: 
+        db.session.add(nuevo_favorito)
+        db.session.commit()
+        return jsonify({'msg': 'Planeta agregado con exito '}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'msg': str(e)}), 500
+    
+
+   
+
+
 
 
 
