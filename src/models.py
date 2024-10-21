@@ -55,19 +55,42 @@ class Personajes(db.Model):
         
 class Favoritos(db.Model):
     id = db.Column(db.Integer,primary_key=True )
-    planeta_favorito = db.Column(db.Integer, db.ForeignKey('planetas.id'))
-    personajes_favorito = db.Column(db.Integer, db.ForeignKey('personajes.id'))
+    user_id= db.Column(db.Integer, db.ForeignKey('Usuario.id'), nullable=False)
+    planeta_favorito = db.Column(db.Integer, db.ForeignKey('planetas.id'), nullable = True)
+    personajes_favorito = db.Column(db.Integer, db.ForeignKey('personajes.id'), nullable=True)
+
+    user = db.relationship('Usuario', backref='favoritos')
+    planeta = db.relationship('Planetas', backref ='favoritos')
+    personaje = db.relationship('Personajes', backref= 'favoritos')
+
 
     def __repr__(self):
         return '<User %r>' % self.id
        
     
     def __serialize(self):
-        return {
+        data = {
             "id": self.id,
-            "planetas_favorito": self.planeta_favorito, 
-            "personajes_favorito": self.personajes_favorito
+            "user_id": self.user_id,
+            "planeta_favorito": None,
+            "personaje_favorito":None,
         }
+
+        #en casao de exisitir un planeta favorito:
+        if self.planeta : 
+            data["planeta_favorito"]={}
+            for key in self.planeta.serialize():
+                data["planeta_favorito"][key]= self.planeta.serialize()[key]
+            
+        
+        #si existe personaje fav: 
+        if self.personaje: 
+            data["personaje_favorito"]={}
+            for key in self.personaje.serialize():
+                data["personaje_favorito"][key]= self.personaje.serialize()[key]
+                
+        return data
+    
 
 
 
